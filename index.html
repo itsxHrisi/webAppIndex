@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cuadrados Rebotando</title>
+    <style>
+      /* Estilos generales */
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      /* Contenedor del canvas y mensaje */
+      .container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      canvas {
+        border: 2px solid black;
+      }
+
+      #mensaje {
+        color: red;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Juego de Cuadrados Rebotando</h1>
+    <button id="addSquare">Agregar Cuadrado</button>
+    <div class="container">
+      <canvas id="gameCanvas" width="500" height="300"></canvas>
+      <p id="mensaje"></p>
+    </div>
+    <p>Puntuación: <span id="score">0</span></p>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const addSquareButton = document.getElementById("addSquare");
+      const scoreDisplay = document.getElementById("score");
+      const mensaje = document.getElementById("mensaje");
+
+      let squares = []; // Almacena los cuadrados en movimiento
+      let score = 0; // Puntuación del juego
+      const maxSquares = 10; // Límite de cuadrados permitidos
+      const colors = ["red", "blue", "green", "yellow", "purple", "orange"]; // Colores posibles
+
+      // Función para generar un color aleatorio
+      function getRandomColor() {
+        return colors[Math.floor(Math.random() * colors.length)];
+      }
+
+      // Función para crear un nuevo cuadrado
+      function createSquare() {
+        if (squares.length >= maxSquares) {
+          mensaje.textContent = "¡Máximo de cuadrados alcanzado!";
+          return;
+        }
+
+        let square = {
+          x: Math.random() * (canvas.width - 20),
+          y: Math.random() * (canvas.height - 20),
+          size: 20,
+          color: getRandomColor(),
+          dx: (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 2),
+          dy: (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 2),
+        };
+
+        squares.push(square);
+      }
+
+      // Función para actualizar la posición de los cuadrados y detectar colisiones
+      function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < squares.length; i++) {
+          let sq = squares[i];
+
+          // Mover el cuadrado
+          sq.x += sq.dx;
+          sq.y += sq.dy;
+
+          // Rebotar en los bordes
+          if (sq.x <= 0 || sq.x + sq.size >= canvas.width) {
+            sq.dx *= -1;
+          }
+          if (sq.y <= 0 || sq.y + sq.size >= canvas.height) {
+            sq.dy *= -1;
+          }
+          // El cálculo para hacer rebotar los cuadrados en el canvas se basa en la detección de colisiones con los bordes
+          // y el cambio de dirección cuando un cuadrado toca un límite.
+
+          // 1. Cada cuadrado tiene una posición (x, y) y una velocidad (dx, dy).
+          // 2. En cada fotograma, la posición se actualiza sumando la velocidad:
+          //      sq.x += sq.dx;
+          //      sq.y += sq.dy;
+          // 3. Si el cuadrado toca los bordes del canvas:
+          //      - Si toca el borde izquierdo (x <= 0) o el derecho (x + size >= canvas.width),
+          //        invertimos la dirección en X: sq.dx *= -1;
+          //      - Si toca el borde superior (y <= 0) o el inferior (y + size >= canvas.height),
+          //        invertimos la dirección en Y: sq.dy *= -1;
+          // 4. Esto crea el efecto de rebote, ya que cada vez que un cuadrado choca con un borde,
+          //    cambia su dirección en el eje correspondiente.
+
+          // Dibujar el cuadrado
+          ctx.fillStyle = sq.color;
+          ctx.fillRect(sq.x, sq.y, sq.size, sq.size);
+        }
+
+        // Detectar colisiones entre cuadrados
+        for (let i = 0; i < squares.length; i++) {
+          for (let j = i + 1; j < squares.length; j++) {
+            let sq1 = squares[i];
+            let sq2 = squares[j];
+
+            if (
+              sq1.x < sq2.x + sq2.size &&
+              sq1.x + sq1.size > sq2.x &&
+              sq1.y < sq2.y + sq2.size &&
+              sq1.y + sq1.size > sq2.y
+            ) {
+              // Si son del mismo color, sumar 1 punto, si no, restar 1
+              if (sq1.color === sq2.color) {
+                score++;
+              } else {
+                score--;
+              }
+              scoreDisplay.textContent = score;
+            }
+          }
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      // Agregar evento al botón para crear cuadrados
+      addSquareButton.addEventListener("click", createSquare);
+
+      // Iniciar la animación
+      update();
+    </script>
+  </body>
+</html>
